@@ -1,75 +1,50 @@
-import pandas as pd
 import mlflow
 import mlflow.sklearn
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+import joblib
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score
-)
+mlflow.set_experiment("diabetes-advance")
 
+df_train = pd.read_csv("dataset_preprocessing/diabetes_train_preprocessed.csv")
+df_test = pd.read_csv("dataset_preprocessing/diabetes_test_preprocessed.csv")
 
-def main():
-    # Load dataset
-    train_df = pd.read_csv("dataset_preprocessing/diabetes_train_preprocessed.csv")
-    test_df = pd.read_csv("dataset_preprocessing/diabetes_test_preprocessed.csv")
+X_train = df_train.drop(columns=["diabetes"])
+y_train = df_train["diabetes"]
+X_test = df_test.drop(columns=["diabetes"])
+y_test = df_test["diabetes"]
 
-    X_train = train_df.drop(columns=["diabetes"])
-    y_train = train_df["diabetes"]
+with mlflow.start_run():
 
-    X_test = test_df.drop(columns=["diabetes"])
-    y_test = test_df["diabetes"]
+    model = RandomForestClassifier(
+        n_estimators=200,
+        max_depth=10,
+        random_state=42
+    )
 
-    # Hyperparameter space
-    param_grid = {
-        "C": [0.01, 0.1, 1.0, 10.0],
-        "solver": ["lbfgs", "liblinear"]
-    }
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
 
-    # Manual MLflow logging
-    mlflow.set_experiment("LogisticRegression_Tuning")
+    # Metrik
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred)
+    rec = recall_score(y_test, y_pred)
 
-    for C in param_grid["C"]:
-        for solver in param_grid["solver"]:
-            with mlflow.start_run():
-                # Log parameters
-                mlflow.log_param("C", C)
-                mlflow.log_param("solver", solver)
-                mlflow.log_param("max_iter", 1000)
+    mlflow.log_metric("accuracy", acc)
+    mlflow.log_metric("precision", prec)
+    mlflow.log_metric("recall", rec)
 
-                # Train model
-                model = LogisticRegression(
-                    C=C,
-                    solver=solver,
-                    max_iter=1000
-                )
-                model.fit(X_train, y_train)
+    # Parameter
+    mlflow.log_param("n_estimators", 200)
+    mlflow.log_param("max_depth", 10)
 
-                # Predict
-                y_pred = model.predict(X_test)
+    # Model
+    mlflow.sklearn.log_model(model, "model")
 
-                # Metrics
-                acc = accuracy_score(y_test, y_pred)
-                prec = precision_score(y_test, y_pred)
-                rec = recall_score(y_test, y_pred)
-                f1 = f1_score(y_test, y_pred)
+    # Artifak
+    joblib.dump(model, "rf_model.pkl")
+    mlflow.log_artifact("rf_model.pkl")
 
-                # Log metrics
-                mlflow.log_metric("accuracy", acc)
-                mlflow.log_metric("precision", prec)
-                mlflow.log_metric("recall", rec)
-                mlflow.log_metric("f1_score", f1)
-
-                # Log model
-                mlflow.sklearn.log_model(model, "model")
-
-                print(
-                    f"C={C}, solver={solver} | "
-                    f"Acc={acc:.4f}, F1={f1:.4f}"
-                )
-
-
-if __name__ == "__main__":
-    main()
+    X_train.head().to_csv("sample_train.csv", index=False)
+    mlflow.log_artifact("sample_train.csv")
