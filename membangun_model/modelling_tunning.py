@@ -4,7 +4,12 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 import joblib
+import dagshub
+import mlflow
 
+# repositori DagsHub
+dagshub.init(repo_owner='viramonicaas', repo_name='eksperimen_SML_ViraMonica', mlflow=True)
+mlflow.set_tracking_uri("https://dagshub.com/viramonicaas/eksperimen_SML_ViraMonica.mlflow")
 mlflow.set_experiment("diabetes-advance")
 
 df_train = pd.read_csv("dataset_preprocessing/diabetes_train_preprocessed.csv")
