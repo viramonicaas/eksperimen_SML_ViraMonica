@@ -10,6 +10,7 @@ import mlflow
 # repositori DagsHub
 dagshub.init(repo_owner='viramonicaas', repo_name='eksperimen_SML_ViraMonica', mlflow=True)
 mlflow.set_tracking_uri("https://dagshub.com/viramonicaas/eksperimen_SML_ViraMonica.mlflow")
+
 mlflow.set_experiment("diabetes-advance")
 
 df_train = pd.read_csv("dataset_preprocessing/diabetes_train_preprocessed.csv")
@@ -23,7 +24,7 @@ y_test = df_test["diabetes"]
 with mlflow.start_run():
 
     model = RandomForestClassifier(
-        n_estimators=200,
+        n_estimators=150,
         max_depth=10,
         random_state=42
     )
