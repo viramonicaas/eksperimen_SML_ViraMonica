@@ -7,9 +7,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 
 def main():
-    # =====================
-    # 1. Load dataset
-    # =====================
+    # Load dataset
     train_df = pd.read_csv("dataset_preprocessing/diabetes_train_preprocessed.csv")
     test_df = pd.read_csv("dataset_preprocessing/diabetes_test_preprocessed.csv")
 
@@ -19,21 +17,15 @@ def main():
     X_test = test_df.drop(columns=["diabetes"])
     y_test = test_df["diabetes"]
 
-    # =====================
-    # 2. Enable MLflow autolog
-    # =====================
+    # Enable MLflow autolog
     mlflow.sklearn.autolog()
 
-    # =====================
-    # 3. Train model
-    # =====================
+    # Train model
     with mlflow.start_run():
         model = LogisticRegression(max_iter=1000)
         model.fit(X_train, y_train)
 
-        # =====================
-        # 4. Evaluation
-        # =====================
+        # Evaluation
         y_pred = model.predict(X_test)
 
         acc = accuracy_score(y_test, y_pred)
